@@ -26,12 +26,10 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        gradient_selector.cpp \
-    gradient_selector_item.cpp
+        gradient_selector.cpp
 
 HEADERS += \
-        gradient_selector.hpp \
-    gradient_selector_item.hpp
+        gradient_selector.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
