@@ -1,4 +1,5 @@
 #include "gradient_selector.hpp"
+#include "gradient_selector_item.hpp"
 
 #include <QPainter>
 #include <QLinearGradient>
@@ -13,7 +14,7 @@ GradientSelector::GradientSelector(
         const QColor& left, const QColor& right, QWidget* parent )
     : QWidget( parent ),
       mHeight( 25 ),
-      mMagrin( 10 )
+      mMargin( 10 )
 {
     this->addGradientPoint( 0.0, left );
     this->addGradientPoint( 1.0, right );
@@ -24,13 +25,21 @@ void GradientSelector::addGradientPoint( const qreal pos, const QColor& color )
     mGradientPositions.append( qMakePair( pos, color ) );
 }
 
+QRect GradientSelector::getGradientRect() const
+{
+    return getGradientRect( this->rect() );
+}
+
+QRect GradientSelector::getGradientRect( const QRect& rect ) const
+{
+    return QRect( rect.left() + this->margin(),
+                  rect.top() + ( rect.height() - this->height() ) / 2,
+                  rect.width() - 2 * this->margin(), this->height() );
+}
+
 void GradientSelector::paintEvent( QPaintEvent* event )
 {
-    QRect gradientRect(
-                event->rect().left() + this->magrin(),
-                event->rect().top() + ( event->rect().height() - this->height() ) / 2,
-                event->rect().width() - 2 * this->magrin(), this->height() );
-
+    QRect gradientRect = this->getGradientRect( event->rect() );
     QLinearGradient gradient( gradientRect.topLeft(), gradientRect.topRight() );
     for( const auto& item : mGradientPositions )
     {
@@ -43,14 +52,30 @@ void GradientSelector::paintEvent( QPaintEvent* event )
 
 void GradientSelector::mousePressEvent( QMouseEvent* event )
 {
+    QRect gradientRect = this->getGradientRect();
+    if( !gradientRect.contains( event->pos() ) ) return;
+
     auto newColor = QColorDialog::getColor( Qt::white, this );
-    this->addGradientPoint( qreal( event->x() ) / this->height(), newColor );
+    if( !newColor.isValid() ) return;
+
+    this->addGradientPoint(
+                qreal( event->x() - gradientRect.x() ) / gradientRect.width(), newColor );
     this->repaint();
 }
 
 QSize GradientSelector::minimumSizeHint() const
 {
-    return QSize( this->magrin() * 4, this->magrin() * 2 + this->height() );
+    return QSize( this->margin() * 4, this->margin() * 2 + this->height() );
+}
+
+qint32 GradientSelector::margin() const
+{
+    return mMargin;
+}
+
+void GradientSelector::setMargin( const qint32& margin )
+{
+    mMargin = margin;
 }
 
 qint32 GradientSelector::height() const
@@ -62,14 +87,3 @@ void GradientSelector::setHeight( const qint32& height )
 {
     mHeight = height;
 }
-
-qint32 GradientSelector::magrin() const
-{
-    return mMagrin;
-}
-
-void GradientSelector::setMagrin( const qint32& magrin )
-{
-    mMagrin = magrin;
-}
-

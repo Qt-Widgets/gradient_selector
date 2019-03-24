@@ -14,15 +14,18 @@ public:
             QWidget* parent = Q_NULLPTR );
     virtual ~GradientSelector() override = default;
 
-    qint32 magrin() const;
-    void setMagrin( const qint32& magrin );
-
     qint32 height() const;
     void setHeight(const qint32& height);
+
+    qint32 margin() const;
+    void setMargin( const qint32& margin );
 
 protected:
 
     void addGradientPoint( const qreal pos, const QColor& color );
+
+    QRect getGradientRect() const;
+    QRect getGradientRect( const QRect& rect ) const;
 
     virtual void paintEvent( QPaintEvent* event ) override;
     virtual void mousePressEvent( QMouseEvent* event ) override;
@@ -31,7 +34,7 @@ protected:
 
 private:
     qint32 mHeight;
-    qint32 mMagrin;
+    qint32 mMargin;
     QVector< QPair< qreal, QColor > > mGradientPositions;
 };
 
