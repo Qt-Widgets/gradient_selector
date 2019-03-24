@@ -27,14 +27,18 @@ protected:
     QRect getGradientRect() const;
     QRect getGradientRect( const QRect& rect ) const;
 
+    void paintTickers( QPainter& painter, const QRect& gradientRect );
+
     virtual void paintEvent( QPaintEvent* event ) override;
     virtual void mousePressEvent( QMouseEvent* event ) override;
+    virtual void mouseMoveEvent( QMouseEvent* event ) override;
 
     virtual QSize minimumSizeHint() const override;
 
 private:
     qint32 mHeight;
     qint32 mMargin;
+    QVector< QPair< qreal, QColor > >::Iterator mHoveredTicker;
     QVector< QPair< qreal, QColor > > mGradientPositions;
 };
 
