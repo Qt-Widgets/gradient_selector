@@ -1,5 +1,4 @@
 #include "gradient_selector.hpp"
-#include "gradient_selector_item.hpp"
 
 #include <QPainter>
 #include <QLinearGradient>
@@ -42,24 +41,81 @@ QRect GradientSelector::getGradientRect( const QRect& rect ) const
                   rect.width() - 2 * this->margin(), this->height() );
 }
 
+void GradientSelector::paintHoveredTicker(
+        QPainter& painter, const QPoint& top, const QPoint& bottom )
+{
+    const QColor tickerColor = Qt::red;
+    const qint32 tickerHeight = 5;
+    const qint32 tickerWidth = 12;
+    const qint32 tickerColorRectHeight = 12;
+    const qint32 tickerValueRectHeight = 12;
+
+    // Draw bottom triangle.
+    QPainterPath bottomTrianglePath;
+    bottomTrianglePath.moveTo( bottom );
+    bottomTrianglePath.lineTo( bottom + QPoint( tickerWidth/2, tickerHeight ) );
+    bottomTrianglePath.lineTo( bottom + QPoint( -tickerWidth/2, tickerHeight ) );
+    painter.fillPath( bottomTrianglePath, tickerColor );
+
+    // Draw top triangle.
+    QPainterPath topTrianglePath;
+    topTrianglePath.moveTo( top );
+    topTrianglePath.lineTo( top + QPoint( tickerWidth/2, -tickerHeight ) );
+    topTrianglePath.lineTo( top + QPoint( -tickerWidth/2, -tickerHeight ) );
+    painter.fillPath( topTrianglePath, tickerColor );
+
+    // Draw ticker line.
+    painter.setPen( tickerColor );
+    painter.drawLine( top, bottom );
+
+    // Draw color rect.
+    painter.drawRect( QRect( top + QPoint( -tickerWidth/2, -( tickerHeight + tickerColorRectHeight ) ),
+                             QSize( tickerWidth, tickerColorRectHeight ) ) );
+
+    // Draw value rect.
+    painter.drawRect( QRect( bottom + QPoint( -tickerWidth/2, tickerHeight ),
+                             QSize( tickerWidth, tickerValueRectHeight ) ) );
+}
+
+void GradientSelector::paintTicker(
+        QPainter& painter, const QPoint& top, const QPoint& bottom )
+{
+    const QColor tickerColor = Qt::black;
+    const qint32 tickerHeight = 5;
+    const qint32 tickerWidth = 8;
+
+    // Draw bottom triangle.
+    QPainterPath bottomTrianglePath;
+    bottomTrianglePath.moveTo( bottom );
+    bottomTrianglePath.lineTo( bottom + QPoint( tickerWidth/2, tickerHeight ) );
+    bottomTrianglePath.lineTo( bottom + QPoint( -tickerWidth/2, tickerHeight ) );
+    painter.fillPath( bottomTrianglePath, tickerColor );
+
+    // Draw top triangle.
+    QPainterPath topTrianglePath;
+    topTrianglePath.moveTo( top );
+    topTrianglePath.lineTo( top + QPoint( tickerWidth/2, -tickerHeight ) );
+    topTrianglePath.lineTo( top + QPoint( -tickerWidth/2, -tickerHeight ) );
+    painter.fillPath( topTrianglePath, tickerColor );
+}
+
 void GradientSelector::paintTickers(
         QPainter& painter, const QRect& gradientRect )
 {
     for( auto it = mGradientPositions.begin(); it != mGradientPositions.end(); ++it )
     {
-        QPoint startPoint(
-                    gradientRect.left() + qCeil( it->first * gradientRect.width() ),
-                    gradientRect.bottom() );
+        qint32 x = gradientRect.left() + qCeil( it->first * gradientRect.width() );
+        QPoint bottomPoint( x, gradientRect.bottom() );
+        QPoint topPoint( x, gradientRect.top() );
 
-        QPainterPath path;
-        path.moveTo( startPoint );
-        path.lineTo( startPoint + QPoint( 5, 5 ) );
-        path.lineTo( startPoint + QPoint( -5, 5 ) );
-
-        QColor tickerColor = Qt::black;
-        if( it == mHoveredTicker ) tickerColor = Qt::red;
-
-        painter.fillPath( path, tickerColor );
+        if( it == mHoveredTicker )
+        {
+            paintHoveredTicker( painter, topPoint, bottomPoint );
+        }
+        else
+        {
+            paintTicker( painter, topPoint, bottomPoint );
+        }
     }
 }
 
@@ -93,7 +149,15 @@ void GradientSelector::mousePressEvent( QMouseEvent* event )
 void GradientSelector::mouseMoveEvent( QMouseEvent* event )
 {
     QRect gradientRect = this->getGradientRect();
-    if( !gradientRect.contains( event->pos() ) ) return;
+    if( !gradientRect.contains( event->pos() ) )
+    {
+        if( mHoveredTicker != mGradientPositions.end() )
+        {
+            mHoveredTicker = mGradientPositions.end();
+            repaint();
+        }
+        return;
+    }
 
     auto newHoveredTicker = std::find_if(
                 mGradientPositions.begin(), mGradientPositions.end(),

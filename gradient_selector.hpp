@@ -27,6 +27,8 @@ protected:
     QRect getGradientRect() const;
     QRect getGradientRect( const QRect& rect ) const;
 
+    void paintHoveredTicker( QPainter& painter, const QPoint& top, const QPoint& bottom );
+    void paintTicker( QPainter& painter, const QPoint& top, const QPoint& bottom );
     void paintTickers( QPainter& painter, const QRect& gradientRect );
 
     virtual void paintEvent( QPaintEvent* event ) override;
